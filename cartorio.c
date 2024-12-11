@@ -1,139 +1,196 @@
-#include <stdio.h>  // Biblioteca para entrada e saída padrão
-#include <stdlib.h> // Biblioteca para comandos do sistema
-#include <locale.h> // Biblioteca para suporte a idiomas com acentos
-#include <string.h> // Biblioteca para cuidar das strings
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <string.h>
 
-int registrar()
-{
-	char arquivo [11];
-	char cpf [11];
-	char nome [40];
-	char sobrenome[40];
-	char cargo[40];
-	
-	printf("Digite o CPF a ser cadastrado (sem pontuação): ");
-	scanf("%s", cpf);
-	
-	strcopy(arquivo, cpf);
-	
-	FILE *file;
-	file = fopen(arquivo, "w");
-	fprintf(file, cpf);
-	fclose(file);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, ",");
-	fclose(file);
-	
-	printf("Digite o nome a ser cadastrado: ");
-	scanf("%s", cpf);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, nome);
-	fclose(file);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, ",");
-	fclose(file);
-	
-	printf("Digite o sobrenome a ser cadastrado: ");
-	scanf("%s", cpf);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, sobrenome);
-	fclose(file);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, ",");
-	fclose(file);
-	
-	printf("Digite o cargo a ser cadastrado: ");
-	scanf("%s", cpf);
-	
-	file = fopen(arquivo, "a");
-	fprintf(file, cargo);
-	fclose(file);	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-}
+// Função para registrar informações de um usuário
+void registrar() {
+    setlocale(LC_ALL, "Portuguese");
 
-int consultar()
-{
-	printf("Você escolheu consultar nomes. Realizando a busca...\n");
+    char cpf[40];
+    char nome[60];
+    char sobrenome[60];
+    char cargo[60];
+    char arquivo[40];
+    char linha[200];
+
+    printf("==========================================\n");
+    printf("       Registro de Novo Usuário           \n");
+    printf("==========================================\n\n");
+
+    printf("Digite o CPF (apenas números, sem pontuação): ");
+    fgets(cpf, sizeof(cpf), stdin);
+    cpf[strcspn(cpf, "\n")] = 0;
+    strcpy(arquivo, cpf);
+
+    // Verificar se o CPF já existe
+    FILE *file = fopen(arquivo, "r");
+    if (file != NULL) {
+        // CPF encontrado, verificar o nome
+        while (fgets(linha, sizeof(linha), file) != NULL) {
+            if (strncmp(linha, "Nome: ", 6) == 0) {
+                strcpy(nome, linha + 6);
+                nome[strcspn(nome, "\n")] = 0; // Remove o newline
+                break;
+            }
+        }
+        fclose(file);
+        printf("\nO usuário %s cujo CPF é %s já está cadastrado!\n\n", nome, cpf);
+        system("pause");
+        return;
+    }
+
+    // Criar novo registro
+    file = fopen(arquivo, "w");
+    if (file == NULL) {
+        printf("\nErro: Não foi possível criar o registro.\n\n");
+        system("pause");
+        return;
+    }
+
+    fprintf(file, "CPF: %s\n", cpf);
+
+    printf("Digite o nome: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = 0;
+    fprintf(file, "Nome: %s\n", nome);
+
+    printf("Digite o sobrenome: ");
+    fgets(sobrenome, sizeof(sobrenome), stdin);
+    sobrenome[strcspn(sobrenome, "\n")] = 0;
+    fprintf(file, "Sobrenome: %s\n", sobrenome);
+
+    printf("Digite o cargo: ");
+    fgets(cargo, sizeof(cargo), stdin);
+    cargo[strcspn(cargo, "\n")] = 0;
+    fprintf(file, "Cargo: %s\n", cargo);
+
+    fclose(file);
+
+    printf("\nRegistro salvo com sucesso!\n\n");
     system("pause");
 }
 
-int deletar()
-{
-	printf("Você escolheu deletar nomes. Verifique as informações antes de prosseguir.\n");
+// Função para consultar registros
+void consultar() {
+    setlocale(LC_ALL, "Portuguese");
+
+    char cpf[40];
+    char conteudo[200];
+
+    printf("==========================================\n");
+    printf("            Consulta de Usuário           \n");
+    printf("==========================================\n\n");
+
+    printf("Digite o CPF para consulta: ");
+    fgets(cpf, sizeof(cpf), stdin);
+    cpf[strcspn(cpf, "\n")] = 0;
+
+    FILE *file = fopen(cpf, "r");
+    if (file == NULL) {
+        printf("\nRegistro não encontrado. Verifique o CPF digitado.\n\n");
+        system("pause");
+        return;
+    }
+
+    printf("\nInformações do Usuário:\n");
+    while (fgets(conteudo, sizeof(conteudo), file) != NULL) {
+        printf("%s", conteudo);
+    }
+
+    fclose(file);
+    printf("\nConsulta concluída com sucesso!\n\n");
     system("pause");
 }
 
-int erro()
-{
-	printf("Opção inválida. Por favor, escolha uma das opções disponíveis.\n");
+// Função para deletar registros
+void deletar() {
+    setlocale(LC_ALL, "Portuguese");
+
+    char cpf[40];
+    char linha[200];
+    char nome[60] = "desconhecido";
+
+    printf("==========================================\n");
+    printf("            Exclusão de Registro          \n");
+    printf("==========================================\n\n");
+
+    printf("Digite o CPF do usuário a ser deletado: ");
+    fgets(cpf, sizeof(cpf), stdin);
+    cpf[strcspn(cpf, "\n")] = 0;
+
+    FILE *file = fopen(cpf, "r");
+    if (file == NULL) {
+        printf("\nRegistro não encontrado. Verifique o CPF digitado.\n\n");
+        system("pause");
+        return;
+    }
+
+    while (fgets(linha, sizeof(linha), file) != NULL) {
+        if (strncmp(linha, "Nome: ", 6) == 0) {
+            strcpy(nome, linha + 6);
+            nome[strcspn(nome, "\n")] = 0;
+            break;
+        }
+    }
+    fclose(file);
+
+    if (remove(cpf) == 0) {
+        printf("\nO usuário %s, cujo CPF é %s, foi deletado com sucesso!\n\n", nome, cpf);
+    } else {
+        printf("\nErro ao tentar deletar o registro. Tente novamente.\n\n");
+    }
+
     system("pause");
 }
 
-int main() 
-{
-    // Variáveis principais
-    int opcao = 0;
-    int laco = 1;
+// Função para tratar opções inválidas
+void erro() {
+    printf("\nOpção inválida. Por favor, escolha uma opção válida do menu.\n\n");
+    system("pause");
+}
 
-    // Loop principal do programa
-    for (laco = 1; laco == 1;) 
-    {
+// Função principal
+int main() {
+    setlocale(LC_ALL, "Portuguese");
+    int opcao;
+
+    while (1) {
         system("cls");
-        setlocale(LC_ALL, "Portuguese");
-
-        // Menu principal
         printf("==========================================\n");
-        printf("\tBem Vindo ao Cartório EBAC\n");
+        printf("            Cartório Digital EBAC         \n");
         printf("==========================================\n\n");
-        printf("Selecione a opção desejada:\n\n");
-        printf("   [1] Registrar nomes\n");
-        printf("   [2] Consultar nomes\n");
-        printf("   [3] Deletar nomes\n\n");
-        printf("Digite sua escolha: ");
-
-        // Captura da escolha do usuário
+        printf("Selecione uma opção do menu:\n");
+        printf("   [1] Registrar novo usuário\n");
+        printf("   [2] Consultar registro\n");
+        printf("   [3] Deletar registro\n");
+        printf("   [4] Sair do sistema\n\n");
+        printf("Sua escolha: ");
         scanf("%d", &opcao);
-        
- 		// Limpa a tela novamente para exibir a escolha
-		system("cls");
-		
-        // Processa a escolha do usuário
-        switch(opcao) 
-        {
+        getchar(); // Limpa o buffer
+
+        system("cls");
+
+        switch (opcao) {
             case 1:
                 registrar();
                 break;
-            
             case 2:
                 consultar();
                 break;
-            
             case 3:
                 deletar();
                 break;
-            
+            case 4:
+                printf("\nObrigado por usar o Cartório Digital EBAC! Até breve!\n");
+                exit(0);
             default:
                 erro();
-                break;
         }
     }
+    return 0;
 }
+
 
 /*
 +--------------------------------------------------------------+
